@@ -13,7 +13,8 @@
     "rules": { 
       "no-console": "warn", 
       "no-use-before-define": "warn", 
-      "spaced-comment": "warn" 
+      "spaced-comment": "warn",
+      "semi":"off" 
     }, 
     "extends": [ 
       "standard" 
