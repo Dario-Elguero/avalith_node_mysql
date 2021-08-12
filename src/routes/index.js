@@ -14,9 +14,9 @@ router.get("/books", (req, res, next) => {
   connect.query(sql, (err, result) => {
     if (err) throw err;
     if (result.length > 0) {
-      return res.status(200).json(result);
+      res.status(200).json(result);
     }else{
-      return res.status(400).send('Database is empty');
+      res.status(400).send('Database is empty');
     }
   });
 });
@@ -24,14 +24,14 @@ router.get("/books", (req, res, next) => {
 router.get("/books/:id", (req, res, next) => {
   const { id } = req.params;
   if (isNaN(id) != false) {
-    return res.send("The ID must be a number");
+    return res.status(400).send("The ID must be a number");
   }
   sql = `SELECT * FROM books WHERE id = ${id}`;
 
   connect.query(sql, (err, result) => {
     if (err) throw err;
     if (result.length > 0) {
-      return res.status(200).json(result);
+      res.status(200).json(result);
     } else {
       res.status(404).send("ID Nonexistent");
     }
@@ -43,7 +43,7 @@ router.put("/books/:id", (req, res, next) => {
   const { name, isbn, author } = req.body;
 
   if (isNaN(id) != false) {
-    return res.send("The ID must be a number");
+    return res.status(400).send("The ID must be a number");
   }
 
   let correct = validCode_ISBN(isbn);
