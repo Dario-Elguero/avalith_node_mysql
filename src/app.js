@@ -1,5 +1,9 @@
 const express = require('express');
-const routes = require('./routes');
+const books = require('./routes/books');
+const authors = require('./routes/authors');
+
+// const connection = require('../src/connection/connection');
+// const connect = connection();
 
 const server = express();
 
@@ -8,7 +12,8 @@ server.name = 'API';
 server.use(express.json())
 server.use(express.urlencoded({ extended: false }))
 
-server.use('/', routes);
+server.use('/books', books);
+server.use('/authors', authors);
 
 server.use((err, req, res, next) => {
   const status = err.status || 500;
@@ -18,4 +23,4 @@ server.use((err, req, res, next) => {
   res.status(status).send(message);
 });
 
-module.exports = server;
+module.exports = { server };
