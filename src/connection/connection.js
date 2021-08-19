@@ -45,8 +45,7 @@ const createTableAuthors = (connec) => {
                 name VARCHAR(30) NOT NULL COLLATE 'latin1_swedish_ci',
                 country VARCHAR(30) NOT NULL COLLATE 'latin1_swedish_ci',
                 deleteAt DATETIME NULL DEFAULT NULL,
-                PRIMARY KEY (id) USING BTREE,
-                UNIQUE INDEX isbn (isbn) USING BTREE)`,
+                PRIMARY KEY (id) USING BTREE`,
       (error, resultado) => {
         if (error) {
           // eslint-disable-next-line no-console
