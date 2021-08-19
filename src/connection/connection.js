@@ -24,8 +24,8 @@ const createTableBooks = (connec) => {
                 author_id INT(11) NOT NULL,
                 deleteAt DATETIME NULL DEFAULT NULL,
                 PRIMARY KEY (id, isbn) USING BTREE,
-                UNIQUE INDEX isbn (isbn) USING BTREE),
-                INDEX FK_books_author (author_id) USING BTREE`,
+                UNIQUE INDEX isbn (isbn) USING BTREE,
+                INDEX FK_books_author (author_id) USING BTREE)`,
       (error, resultado) => {
         if (error) {
           // eslint-disable-next-line no-console
@@ -45,7 +45,7 @@ const createTableAuthors = (connec) => {
                 name VARCHAR(30) NOT NULL COLLATE 'latin1_swedish_ci',
                 country VARCHAR(30) NOT NULL COLLATE 'latin1_swedish_ci',
                 deleteAt DATETIME NULL DEFAULT NULL,
-                PRIMARY KEY (id) USING BTREE`,
+                PRIMARY KEY (id) USING BTREE)`,
       (error, resultado) => {
         if (error) {
           // eslint-disable-next-line no-console
