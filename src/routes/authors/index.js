@@ -2,14 +2,13 @@
 require('dotenv').config();
 const { Router } = require('express');
 const connection = require('../../connection/connection');
+const {dataAuthor, idAuthor} = require('../../verify/dataAuthor');
 const connect = connection();
 // const { connect } = require('../../app')
 const router = Router();
 
-let sql = '';
-
 router.get('/', (req, res, next) => {
-  sql = `SELECT id, name, country FROM authors WHERE deleteAt is null`;
+  const sql = `SELECT id, name, country FROM authors WHERE deleteAt is null`;
 
   connect.query(sql, (err, result) => {
     if (err) throw err;
@@ -21,13 +20,10 @@ router.get('/', (req, res, next) => {
   });
 });
 
-router.get('/:id', (req, res, next) => {
+router.get('/:id',idAuthor, (req, res, next) => {
   const { id } = req.params;
-  if (isNaN(id) !== false) {
-    return res.status(400).send('The ID must be a number');
-  }
-
-  sql = `SELECT id, name, country, deleteAt FROM authors
+  
+  const sql = `SELECT id, name, country, DATE_FORMAT(deleteAt, "%d-%m-%Y") as deleteAt FROM authors
         WHERE id = ?` // ${id}`;
 
   connect.query(sql, [id], (err, result) => {
@@ -43,23 +39,11 @@ router.get('/:id', (req, res, next) => {
   });
 });
 
-router.put('/:id', (req, res, next) => {
+router.put('/:id',idAuthor, dataAuthor, (req, res, next) => {
   const { id } = req.params;
   const { name, country } = req.body;
 
-  if (isNaN(id) !== false) {
-    return res.status(400).send('The ID must be a number');
-  }
-
-  if (!name || !country) {
-    return res.status(400).send(`Fields cannot be empty`);
-  }
-
-  if (name.length > 30 || country.length > 30) {
-    return res.status(400).send(`The length must not exceed 30 characters`);
-  }
-
-  sql = `SELECT * FROM authors WHERE id = ?`;
+  let sql = `SELECT * FROM authors WHERE id = ?`;
   connect.query(sql, [Number(id)], (err, result) => {
     if (err) {
       // throw err;
@@ -84,9 +68,9 @@ router.put('/:id', (req, res, next) => {
   });
 });
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', idAuthor, (req, res, next) => {
   const { id } = req.params;
-  sql = `SELECT id FROM authors WHERE id = ?`;
+  let sql = `SELECT id FROM authors WHERE id = ?`;
 
   connect.query(sql, [Number(id)], (err, result) => {
     if (err) {
@@ -113,18 +97,10 @@ router.delete('/:id', (req, res, next) => {
   });
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', dataAuthor, (req, res, next) => {
   const { name, country } = req.body;
 
-  if (!name || !country) {
-    return res.status(400).send(`Fields cannot be empty`);
-  }
-
-  if (name.length > 30 || country.length > 30) {
-    return res.status(400).send(`The length must not exceed 30 characters`);
-  }
-
-  sql = `INSERT INTO authors(name, country) VALUES (?, ?)`;
+  const sql = `INSERT INTO authors(name, country) VALUES (?, ?)`;
 
   connect.query(sql, [name, country], (err, result) => {
     if (err) {

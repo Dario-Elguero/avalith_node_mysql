@@ -14,7 +14,8 @@
       "no-console": "warn", 
       "no-use-before-define": "warn", 
       "spaced-comment": "warn",
-      "semi":"off" 
+      "semi":"off",
+      "quotes":["error", "doble"]
     }, 
     "extends": [ 
       "standard" 
