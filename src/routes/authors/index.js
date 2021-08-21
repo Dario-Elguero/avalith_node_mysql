@@ -2,7 +2,8 @@
 require('dotenv').config();
 const { Router } = require('express');
 const connection = require('../../connection/connection');
-const {dataAuthor, idAuthor} = require('../../verify/validAuthor');
+const dataAuthor = require('../../verify/validAuthor');
+const validId = require('../../verify/validId');
 const connect = connection();
 // const { connect } = require('../../app')
 const router = Router();
@@ -20,7 +21,7 @@ router.get('/', (req, res, next) => {
   });
 });
 
-router.get('/:id',idAuthor, (req, res, next) => {
+router.get('/:id', validId, (req, res, next) => {
   const { id } = req.params;
   
   const sql = `SELECT id, name, country, DATE_FORMAT(deleteAt, "%d-%m-%Y") as deleteAt FROM authors
@@ -39,7 +40,7 @@ router.get('/:id',idAuthor, (req, res, next) => {
   });
 });
 
-router.put('/:id',idAuthor, dataAuthor, (req, res, next) => {
+router.put('/:id', validId, dataAuthor, (req, res, next) => {
   const { id } = req.params;
   const { name, country } = req.body;
 
@@ -68,7 +69,7 @@ router.put('/:id',idAuthor, dataAuthor, (req, res, next) => {
   });
 });
 
-router.delete('/:id', idAuthor, (req, res, next) => {
+router.delete('/:id', validId, (req, res, next) => {
   const { id } = req.params;
   let sql = `SELECT id FROM authors WHERE id = ?`;
 

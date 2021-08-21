@@ -1,8 +1,11 @@
-function validCode_ISBN(isbn) {
+const validCode_ISBN = (req, res, next) => {
+  let { isbn } = req.body;
+
   isbn = isbn.replace(/-/g, "");
 
   const characters = isbn.split("");
   let sum = 0;
+  let control = false;
 
   if (isbn.length === 10) {
     if (characters[9].toUpperCase() === "X") {
@@ -12,7 +15,7 @@ function validCode_ISBN(isbn) {
     for (let i = 0; i < characters.length; i++) {
       sum += (i + 1) * parseInt(characters[i]);
     }
-    return sum % 11 == 0;
+    control = sum % 11 === 0;
   } else if (isbn.length === 13) {
     let calc = 1;
     for (let i = 0; i < characters.length - 1; i++) {
@@ -27,9 +30,18 @@ function validCode_ISBN(isbn) {
 
     let verify = 10 - (sum % 10);
 
-    return verify === Number(characters[12]);
-  } else {
-    return false;
+    control = verify === Number(characters[12]);
+  }
+
+  if (control){
+    next();
+  }else{
+    res
+      .status(400)
+      .json({
+        Valid: false,
+        Error: 'ISBN is invalid, check if each number is correct'
+      });
   }
 }
 

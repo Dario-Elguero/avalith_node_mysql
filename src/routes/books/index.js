@@ -2,14 +2,13 @@
 require('dotenv').config();
 const { Router } = require('express');
 const connection = require('../../connection/connection');
+const validBook = require('../../verify/validBook');
+const validId = require('../../verify/validId');
 // eslint-disable-next-line camelcase
 const validCode_ISBN = require('../../verify/validIsbn');
 const connect = connection();
-// const { connect } = require('../../app')
 
 const router = Router();
-
-let sql = '';
 
 const structureBook = (result) => {
   const structure = result.map((book) => ({
@@ -27,7 +26,7 @@ const structureBook = (result) => {
 }
 
 router.get('/', (req, res, next) => {
-  sql = `SELECT books.id, books.name, isbn, author_id, author.name as author_name, country FROM books inner Join author WHERE author.id = books.author_id AND books.deleteAt is null`;
+  const sql = `SELECT books.id, books.name, isbn, author_id, authors.name as author_name, country FROM books inner Join authors WHERE authors.id = books.author_id AND books.deleteAt is null`;
 
   connect.query(sql, (err, result) => {
     if (err) throw err;
@@ -40,14 +39,11 @@ router.get('/', (req, res, next) => {
   });
 });
 
-router.get('/:id', (req, res, next) => {
+router.get('/:id', validId, (req, res, next) => {
   const { id } = req.params;
-  if (isNaN(id) !== false) {
-    return res.status(400).send('The ID must be a number');
-  }
-  // sql = `SELECT id, name, isbn, author_id, name, country FROM books WHERE id = ${id}`;
-  sql = `SELECT books.id, books.name, isbn, author_id, author.name as author_name, country FROM books inner Join author
-        WHERE author.id = books.author_id AND books.id = ?` // ${id}`;
+    
+  const sql = `SELECT books.id, books.name, isbn, author_id, authors.name as author_name, country FROM books inner Join authors
+        WHERE authors.id = books.author_id AND books.id = ?` // ${id}`;
 
   connect.query(sql, [id], (err, result) => {
     if (err) {
@@ -63,24 +59,11 @@ router.get('/:id', (req, res, next) => {
   });
 });
 
-router.put('/:id', (req, res, next) => {
+router.put('/:id', validId, validCode_ISBN, validBook, (req, res, next) => {
   const { id } = req.params;
   const { name, isbn, author } = req.body;
 
-  if (isNaN(id) !== false) {
-    return res.status(400).send('The ID must be a number');
-  }
-
-  const correct = validCode_ISBN(isbn);
-  if (!correct) {
-    res
-      .status(400)
-      .json({
-        Valid: false,
-        Error: 'ISBN is invalid, check if each number is correct'
-      });
-  } else {
-    sql = `SELECT * FROM books WHERE isbn = ? and id != ?`;
+    let sql = `SELECT * FROM books WHERE isbn = ? and id != ?`;
     connect.query(sql, [isbn, Number(id)], (err, result) => {
       if (err) {
         // throw err;
@@ -89,8 +72,8 @@ router.put('/:id', (req, res, next) => {
       if (result.length > 0) {
         return res.status(400).send('The ISBN entered is already registered');
       } else {
-        // sql = `UPDATE books SET name = '${name}',isbn = '${isbn}', author = '${author}' WHERE id = ${Number(id)}`;
-        sql = `UPDATE books SET name = ?,isbn = ?, author = ? WHERE id = ?`;
+        
+        sql = `UPDATE books SET name = ?,isbn = ?, author_id = ? WHERE id = ?`;
 
         connect.query(sql, [name, isbn, author, Number(id)], (err, result) => {
           if (err) {
@@ -106,12 +89,11 @@ router.put('/:id', (req, res, next) => {
         });
       }
     });
-  }
 });
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', validId, (req, res, next) => {
   const { id } = req.params;
-  sql = `SELECT id FROM books WHERE id = ?`;
+  let sql = `SELECT id FROM books WHERE id = ?`;
 
   connect.query(sql, [Number(id)], (err, result) => {
     if (err) {
@@ -138,22 +120,10 @@ router.delete('/:id', (req, res, next) => {
   });
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', validCode_ISBN, validBook, (req, res, next) => {
   const { isbn, name, author } = req.body;
-  if (!(isbn && name && author)) {
-    return res.status(400).send('Verify, there can be no empty fields');
-  }
-
-  const correct = validCode_ISBN(isbn);
-  if (!correct) {
-    res
-      .status(400)
-      .json({
-        Valid: false,
-        Error: 'ISBN is invalid, check if each number is correct'
-      });
-  } else {
-    sql = `SELECT * FROM books WHERE isbn = ?`;
+  
+  let sql = `SELECT * FROM books WHERE isbn = ?`;
     connect.query(sql, [isbn], (err, result) => {
       if (err) {
         // throw err;
@@ -162,18 +132,17 @@ router.post('/', (req, res, next) => {
       if (result.length > 0) {
         return res.status(400).send('The ISBN entered is already registered');
       } else {
-        sql = `INSERT INTO books(name, isbn, author) VALUES (?, ?, ?)`;
+        sql = `INSERT INTO books(name, isbn, author_id) VALUES (?, ?, ?)`;
 
         connect.query(sql, [name, isbn, author], (err, result) => {
           if (err) {
             // throw err;
-            res.status(500).send('Internal server error')
+            return res.status(500).send('Internal server error')
           }
+          res.status(200).json({ Save: true, book: 'The book is salved' });
         });
-        res.status(200).json({ Save: true, book: 'The book is salved' });
       }
     });
-  }
 });
 
 module.exports = router;

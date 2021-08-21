@@ -14,15 +14,4 @@ const dataAuthor = (req, res, next) => {
     
 }
 
-const idAuthor = (req, res, next) => {
-    const { id } = req.params;
-  
-  if (isNaN(id) !== false) {
-    return res.status(400).send('The ID must be a number');
-  }
-
-  next();
-    
-}
-
-module.exports = {dataAuthor, idAuthor};
+module.exports = dataAuthor;
