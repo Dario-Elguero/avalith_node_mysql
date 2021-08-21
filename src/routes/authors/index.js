@@ -2,7 +2,7 @@
 require('dotenv').config();
 const { Router } = require('express');
 const connection = require('../../connection/connection');
-const {dataAuthor, idAuthor} = require('../../verify/dataAuthor');
+const {dataAuthor, idAuthor} = require('../../verify/validAuthor');
 const connect = connection();
 // const { connect } = require('../../app')
 const router = Router();
