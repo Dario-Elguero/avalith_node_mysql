@@ -4,8 +4,10 @@ const { Router } = require('express');
 const connection = require('../../connection/connection');
 const validBook = require('../../verify/validBook');
 const validId = require('../../verify/validId');
+const TYPE = require("../types");
 // eslint-disable-next-line camelcase
 const validCode_ISBN = require('../../verify/validIsbn');
+const bookSQL = require('../querySql/bookSql');
 const connect = connection();
 
 const router = Router();
@@ -26,10 +28,13 @@ const structureBook = (result) => {
 }
 
 router.get('/', (req, res, next) => {
-  const sql = `SELECT books.id, books.name, isbn, author_id, authors.name as author_name, country FROM books inner Join authors WHERE authors.id = books.author_id AND books.deleteAt is null`;
+
+  const sql = bookSQL(TYPE.SELECT_ALL_BOOKS)
 
   connect.query(sql, (err, result) => {
-    if (err) throw err;
+    if (err) {
+      res.status(500).send('Internal server error')
+    }
     if (result.length > 0) {
       const structure = structureBook(result)
       res.status(200).json(structure);
@@ -42,12 +47,10 @@ router.get('/', (req, res, next) => {
 router.get('/:id', validId, (req, res, next) => {
   const { id } = req.params;
     
-  const sql = `SELECT books.id, books.name, isbn, author_id, authors.name as author_name, country FROM books inner Join authors
-        WHERE authors.id = books.author_id AND books.id = ?` // ${id}`;
+  const sql = bookSQL(TYPE.SELECT_BOOK_BY_ID)
 
-  connect.query(sql, [id], (err, result) => {
+  connect.query(sql, [Number(id)], (err, result) => {
     if (err) {
-      // throw err;
       res.status(500).send('Internal server error')
     }
     if (result.length > 0) {
@@ -63,21 +66,19 @@ router.put('/:id', validId, validCode_ISBN, validBook, (req, res, next) => {
   const { id } = req.params;
   const { name, isbn, author } = req.body;
 
-    let sql = `SELECT * FROM books WHERE isbn = ? and id != ?`;
+    let sql = bookSQL(TYPE.EXIST_ISBN_PUT)
     connect.query(sql, [isbn, Number(id)], (err, result) => {
       if (err) {
-        // throw err;
         res.status(500).send('Internal server error')
       }
       if (result.length > 0) {
         return res.status(400).send('The ISBN entered is already registered');
       } else {
         
-        sql = `UPDATE books SET name = ?,isbn = ?, author_id = ? WHERE id = ?`;
+        sql = bookSQL(TYPE.UPDATE_BOOK)
 
         connect.query(sql, [name, isbn, author, Number(id)], (err, result) => {
           if (err) {
-            // throw err;
             res.status(500).send('Internal server error')
           }
 
@@ -93,18 +94,16 @@ router.put('/:id', validId, validCode_ISBN, validBook, (req, res, next) => {
 
 router.delete('/:id', validId, (req, res, next) => {
   const { id } = req.params;
-  let sql = `SELECT id FROM books WHERE id = ?`;
+  let sql = bookSQL(TYPE.EXIST_BOOK)
 
   connect.query(sql, [Number(id)], (err, result) => {
     if (err) {
-      // throw err;
       res.status(500).send('Internal server error')
     }
     if (result.length > 0) {
-      sql = `UPDATE books SET deleteAt = NOW() WHERE id = ? AND deleteAt is null`;
+      sql =bookSQL(TYPE.DELETE_BOOK)
       connect.query(sql, [Number(id)], (err, result) => {
         if (err) {
-          // throw err;
           res.status(500).send('Internal server error')
         }
 
@@ -123,20 +122,18 @@ router.delete('/:id', validId, (req, res, next) => {
 router.post('/', validCode_ISBN, validBook, (req, res, next) => {
   const { isbn, name, author } = req.body;
   
-  let sql = `SELECT * FROM books WHERE isbn = ?`;
+  let sql = bookSQL(TYPE.EXIST_ISBN)
     connect.query(sql, [isbn], (err, result) => {
       if (err) {
-        // throw err;
         res.status(500).send('Internal server error')
       }
       if (result.length > 0) {
         return res.status(400).send('The ISBN entered is already registered');
       } else {
-        sql = `INSERT INTO books(name, isbn, author_id) VALUES (?, ?, ?)`;
+        sql = bookSQL(TYPE.INSERT_BOOK)
 
         connect.query(sql, [name, isbn, author], (err, result) => {
           if (err) {
-            // throw err;
             return res.status(500).send('Internal server error')
           }
           res.status(200).json({ Save: true, book: 'The book is salved' });
